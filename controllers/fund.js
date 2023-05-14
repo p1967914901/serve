@@ -1,10 +1,11 @@
-const fs = require('fs');
+const Fund = require('../service/model/fund');
 
 module.exports = class FundController {
   static async listFund(ctx) {
-    console.log(ctx.request.body)
-    const file = await fs.readFileSync('./data/fundList.json');
-    const data = JSON.parse(file.toString());
+    console.log(ctx.request.body);
+    const data = await Fund.findAll({
+      attributes: { exclude: ['createdAt', 'updatedAt'] }
+    })
     const res = {
         data,
         message: '',
@@ -15,65 +16,38 @@ module.exports = class FundController {
   static async deleteFund(ctx) {
     const info = ctx.request.body;
     console.log(info);
-    const file = await fs.readFileSync('./data/fundList.json');
-    let data = JSON.parse(file.toString());
-    const res = {
-        data: {},
-        message: '',
+    await Fund.destroy({
+      where: { id: info.id }
+    });
+    ctx.body = {
+      data: info,
+      message: '删除成功',
     };
-    data = data.filter(item => item.id !== info.id)
-    res.data = info;
-    res.message = '删除成功';
-    await fs.writeFileSync('./data/fundList.json', JSON.stringify(data));
-    ctx.body = res;
   }
 
   static async insertFund(ctx) {
     const info = ctx.request.body;
     console.log(info);
-    const file = await fs.readFileSync('./data/fundList.json');
-    const data = JSON.parse(file.toString());
+    const newFund = await Fund.create(info);
     const res = {
-        data: {},
-        message: '',
+        data: newFund,
+        message: '添加成功',
     };
-    const record = {};
-    for(const key of Object.keys(data[0])) {
-        record[key] = info[key];
-    }
-    record.id = data.length;
-    data.unshift(record);
-    res.data = record;
-    res.message = '添加成功';
-    await fs.writeFileSync('./data/fundList.json', JSON.stringify(data));
     ctx.body = res;
   }
 
   static async updateFund(ctx) {
     const info = ctx.request.body;
     console.log(info);
-    const file = await fs.readFileSync('./data/fundList.json');
-    const data = JSON.parse(file.toString());
+    const data = await Fund.update(info, {
+      where: {
+        id: info.id
+      }
+    })
     const res = {
-        data: {},
-        message: '',
+        data,
+        message: '更新成功',
     };
-    for (let i = 0; i < data.length; i++) {
-        if (data[i]['id'] === info.id) {
-            for(const key of Object.keys(data[i])) {
-                if (key !== "id") {
-                    // console.log(key)
-                    data[i][key] = info[key];
-                }
-            }
-            res.message = '更新成功';
-            res.data = JSON.parse(JSON.stringify(data[i]));
-            break;
-        }
-    }
-    await fs.writeFileSync('./data/fundList.json', JSON.stringify(data));
     ctx.body = res;
   }
-
-
 }

@@ -1,10 +1,11 @@
-const fs = require('fs');
+const User = require('../service/model/user');
 
 module.exports = class UserController {
   static async listUsers(ctx) {
-    console.log(ctx.request.body)
-    const file = await fs.readFileSync('./data/userList.json');
-    const data = JSON.parse(file.toString());
+    console.log(ctx.request.body);
+    const data = await User.findAll({
+      attributes: { exclude: ['createdAt', 'updatedAt'] }
+    })
     const res = {
         data,
         message: '',
@@ -15,65 +16,38 @@ module.exports = class UserController {
   static async deleteUser(ctx) {
     const info = ctx.request.body;
     console.log(info);
-    const file = await fs.readFileSync('./data/userList.json');
-    let data = JSON.parse(file.toString());
-    const res = {
-        data: {},
-        message: '',
+    await User.destroy({
+      where: { username: info.username }
+    });
+    ctx.body = {
+      data: info,
+      message: '删除成功',
     };
-    const record = {};
-    data = data.filter(item => item.username !== info.username)
-    res.data = info;
-    res.message = '删除成功';
-    await fs.writeFileSync('./data/userList.json', JSON.stringify(data));
-    ctx.body = res;
   }
 
   static async insertUser(ctx) {
     const info = ctx.request.body;
     console.log(info);
-    const file = await fs.readFileSync('./data/userList.json');
-    const data = JSON.parse(file.toString());
+    const newUser = await User.create(info);
     const res = {
-        data: {},
-        message: '',
+        data: newUser,
+        message: '添加成功',
     };
-    const record = {};
-    for(const key of Object.keys(data[0])) {
-        record[key] = info[key];
-    }
-    data.unshift(record);
-    res.data = record;
-    res.message = '添加成功';
-    await fs.writeFileSync('./data/userList.json', JSON.stringify(data));
     ctx.body = res;
   }
 
   static async updateUser(ctx) {
     const info = ctx.request.body;
     console.log(info);
-    const file = await fs.readFileSync('./data/userList.json');
-    const data = JSON.parse(file.toString());
+    const data = await User.update(info, {
+      where: {
+        id: info.id
+      }
+    })
     const res = {
-        data: {},
-        message: '',
+        data,
+        message: '更新成功',
     };
-    for (let i = 0; i < data.length; i++) {
-        if (data[i]['username'] === info.username) {
-            for(const key of Object.keys(data[i])) {
-                if (key !== "id") {
-                    // console.log(key)
-                    data[i][key] = info[key];
-                }
-            }
-            res.message = '更新成功';
-            res.data = JSON.parse(JSON.stringify(data[i]));
-            break;
-        }
-    }
-    await fs.writeFileSync('./data/userList.json', JSON.stringify(data));
     ctx.body = res;
   }
-
-
 }

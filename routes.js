@@ -13,7 +13,7 @@ const RankingController = require('./controllers/ranking');
 
 
 const router = new Router();
-
+ 
 // auth 相关的路由
 router.post('/auth/login', AuthController.login);
 
