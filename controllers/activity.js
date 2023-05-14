@@ -133,28 +133,117 @@ module.exports = class ActivityController {
   static async updateActivity(ctx) {
     const info = ctx.request.body;
     console.log(info);
-    const file = await fs.readFileSync('./data/activityList.json');
-    const data = JSON.parse(file.toString());
-    const res = {
-        data: {},
-        message: '',
-    };
-    for (let i = 0; i < data.length; i++) {
-        if (data[i]['id'] === info.id) {
-            for(const key of Object.keys(data[i])) {
-                if (key !== "id") {
-                    // console.log(key)
-                    data[i][key] = info[key];
-                }
-            }
-            res.message = '更新成功';
-            res.data = JSON.parse(JSON.stringify(data[i]));
-            break;
-        }
+
+    const oldEquipments = await EquipCall.findAll({
+      where: {
+        activityId: info.id
+      }
+    });
+
+    const { equipments: newEquipments } = info;
+    for(const equip of oldEquipments) {
+      const item = newEquipments.find(item => item.id === equip.equip);
+      if (!item) {
+        await EquipCall.destroy({
+          where: { id: equip.id }
+        })
+      }
     }
-    await fs.writeFileSync('./data/activityList.json', JSON.stringify(data));
-    ctx.body = res;
+
+    for(const equip of newEquipments) {
+      const item = oldEquipments.find(item => item.equip === equip.id);
+      if (!item) {
+        await EquipCall.create({
+          activityId: info.id,
+          equip: equip.id
+        })
+      }
+    }
+
+    info.equipments = undefined;
+    info.participants = undefined;
+
+    await Activity.update(info, {
+      where: { id: info.id }
+    });
+
+    ctx.body = {
+      message: '更新成功',
+      data: {}
+    };
   }
 
+  static async rematch(ctx) {
+    const info = ctx.request.body;
+    console.log(info); // username, id, activityType
 
+    await PersonCall.destroy({
+      where: { activityId: info.id, username: info.p.username }
+    });
+
+    let usersHasTime = await User.findAll({
+      where: {
+        advantage: info.activityType,
+        conditions: { [Op.or]: [0, 1] },
+        state: 0,
+        isLeave: 0
+      }
+    });
+    
+    let data = 0;
+    for(const p of usersHasTime) {
+      const item = info.participants.find(item => item.username === p.username);
+      if (!item) {
+        data = {
+          "name": p.name,
+          "username": p.username,
+          "gender": p.gender,
+          "phone": p.phone,
+          "isSure": '未确认'
+        }
+        break;
+      }
+    }
+
+    if (data === 0) {
+      const p = await User.findOne({
+        where: {
+          advantage: { [Op.not]: data.activityType },
+          conditions: { [Op.or]: [0, 1] },
+          state: 0,
+          isLeave: 0
+        }
+      });
+      data = {
+        "name": p.name,
+        "username": p.username,
+        "gender": p.gender,
+        "phone": p.phone,
+        "isSure": '未确认'
+      }
+    }
+
+    await PersonCall.create({...data, activityId: info.id});
+
+    ctx.body = {
+      message: '匹配成功',
+      data
+    }
+  }
+
+  static async sure(ctx) {
+    const info = ctx.request.body;
+    console.log(info);
+
+    await PersonCall.update({isSure: '确认'}, {
+      where: {
+        activityId: info.id, username: info.p.username
+      }
+    });
+
+    ctx.body = {
+      data: {},
+      message: '确认成功'
+    }
+  }
 }

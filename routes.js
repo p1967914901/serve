@@ -40,6 +40,8 @@ router.post('/activity/list', ActivityController.listActivity);
 router.post('/activity/update', ActivityController.updateActivity);
 router.post('/activity/insert', ActivityController.insertActivity);
 router.post('/activity/delete', ActivityController.deleteActivity);
+router.post('/activity/rematch', ActivityController.rematch);
+router.post('/activity/sure', ActivityController.sure);
 
 // scheduling 相关的路由
 router.post('/scheduling/list', SchedulingController.listScheduling);
