@@ -83,7 +83,7 @@ module.exports = class ActivityController {
       await EquipCall.create({ activityId: data.id, equip: item.id });
     }
     
-    const usersHasTime = await User.findAll({
+    let usersHasTime = await User.findAll({
       where: {
         advantage: data.activityType,
         conditions: { [Op.or]: [0, 1] },
@@ -91,6 +91,18 @@ module.exports = class ActivityController {
         isLeave: 0
       }
     });
+    if (usersHasTime.length < data.userNumRequired) {
+      const otherUsersHasTime = await User.findAll({
+        where: {
+          advantage: { [Op.not]: data.activityType },
+          conditions: { [Op.or]: [0, 1] },
+          state: 0,
+          isLeave: 0
+        }
+      });
+      usersHasTime = JSON.parse(JSON.stringify(usersHasTime));
+      usersHasTime.push(...otherUsersHasTime.slice(0, data.userNumRequired - usersHasTime.length));
+    }
     data.participants = [];
     const set = new Set();
     for(let i = 0; i < data.userNumRequired; i++) {

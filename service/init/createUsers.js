@@ -35,6 +35,48 @@ const data = mockjs.mock({
     }]
 });
 
+data.data.push(mockjs.mock({
+  'name': '队长1',
+  'username': 'admin',
+  'gender|1': [0, 1],
+  'phone': '@phone',
+  'birthday': '@date("yyyy-MM-dd")',
+  'idNo': '@id', // 身份证号
+  'workingSeniority|1-10': 0, // 从业年限
+  'conditions': 1, // 0-一般 1-健康 2-带伤
+  'job': '工作',
+  'workPlace': '@county(true)',
+  'skill': '技能',
+  'advantage|1': ['应急救援', '社会救助', '社会培训', '宣讲演练', '其他'],
+  'grade': 0, // 0-队长 1-队员
+  'state': 0, // 0-在岗 1-出任务 2-忙碌
+  'isLeave': 0, // 0-在队 1-离队
+  'reason': '原因',
+  'password': 'admin',
+  'createTime': '@date("yyyy-MM-dd")', // 入队时间
+}));
+
+data.data.push(mockjs.mock({
+  'name': '队员1',
+  'username': 'user',
+  'gender|1': [0, 1],
+  'phone': '@phone',
+  'birthday': '@date("yyyy-MM-dd")',
+  'idNo': '@id', // 身份证号
+  'workingSeniority|1-10': 0, // 从业年限
+  'conditions': 1, // 0-一般 1-健康 2-带伤
+  'job': '工作',
+  'workPlace': '@county(true)',
+  'skill': '技能',
+  'advantage|1': ['应急救援', '社会救助', '社会培训', '宣讲演练', '其他'],
+  'grade': 1, // 0-队长 1-队员
+  'state': 0, // 0-在岗 1-出任务 2-忙碌
+  'isLeave': 0, // 0-在队 1-离队
+  'reason': '原因',
+  'password': 'user',
+  'createTime': '@date("yyyy-MM-dd")', // 入队时间
+}));
+
 module.exports = async () => {
     await User.sync({ force: true });
     await User.bulkCreate(data.data);
