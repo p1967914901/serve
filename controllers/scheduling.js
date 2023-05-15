@@ -38,15 +38,20 @@ module.exports = class SchedulingController {
   static async updateScheduling(ctx) {
     const info = ctx.request.body;
     console.log(info);
-    const data = await Scheduling.update(info, {
-      where: {
-        id: info.id
+    
+    const result = await Scheduling.findOne({ where: { year: info.year, month: info.month, day: info.day } });
+    if (result === null) {
+      const data = await Scheduling.create(info);
+      ctx.body = {
+        data, message: '添加成功'
       }
-    })
-    const res = {
-        data,
-        message: '更新成功',
-    };
-    ctx.body = res;
+    } else {
+      const data = await Scheduling.update(info, {
+        where: { id: result.id }
+      });
+      ctx.body = {
+        data, message: '编辑成功'
+      }
+    }
   }
 }
