@@ -3,6 +3,7 @@ const { Random } = require('mockjs');
 const { EquipCall, Activity, PersonCall } = require('../service/model/activity');
 const Equip = require('../service/model/equip');
 const User = require('../service/model/user');
+const Ranking = require('../service/model/ranking');
 
 module.exports = class ActivityController {
   static async listActivity(ctx) {
@@ -45,6 +46,11 @@ module.exports = class ActivityController {
       await EquipCall.destroy({
         where: { equip: item.id }
       });
+      if (info.status === '进行中') {
+        await Equip.update({ status: '在库' }, {
+          where: { id: item.id }
+        });
+      }
     }
 
     for(const item of info.participants) {
@@ -69,7 +75,7 @@ module.exports = class ActivityController {
     
     const record = {};
     const keys = ['activityType', 'reporterName', 'reporterPhone', 'reporterAddress', 'activityAddress', 
-      'fund', 'duration', 'userNumRequired', 'skillRequired', 'createTime', 'endTime', 'detail'
+      'fund', 'duration', 'userNumRequired', 'skillRequired', 'createTime', 'endTime', 'detail', 'status'
     ]
     for(const key of keys) {
         record[key] = info[key];
@@ -81,6 +87,9 @@ module.exports = class ActivityController {
     data.equipments = info.equipments;
     for(const item of info.equipments) {
       await EquipCall.create({ activityId: data.id, equip: item.id });
+      await Equip.update({ status: '使用中' }, {
+        where: { id: item.id }
+      });
     }
     
     let usersHasTime = await User.findAll({
@@ -241,9 +250,41 @@ module.exports = class ActivityController {
       }
     });
 
+    await User.update({ state: 1 }, {
+      where: { username: info.p.username }
+    });
+
     ctx.body = {
       data: {},
       message: '确认成功'
+    }
+  }
+
+  static async finish(ctx) {
+    const info = ctx.request.body;
+    console.log(info);
+
+    const types = ['应急救援', '社会救助', '社会培训', '宣讲演练', '其他'];
+    const scores = [6, 4, 2, 2, 2];
+    const score = scores[types.indexOf(info.activityType)] * info.duration;
+    for(const p of info.participants) {
+      await Ranking.increment({ score }, { where: { username: p.username } });
+      await User.update({ state: 0 }, {
+        where: { username: p.username }
+      });
+    }
+
+    for(const item of info.equipments) {
+      await Equip.update({ status: '在库' }, {
+        where: { id: item.id }
+      });
+    }
+
+    
+
+    ctx.body = {
+      data: {},
+      message: '成功结项'
     }
   }
 }

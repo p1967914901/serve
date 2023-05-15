@@ -8,6 +8,7 @@ const EquipCall = sequelize.define("equipCall", {
 
 const Activity = sequelize.define("activity", {
     activityType: DataTypes.STRING,
+    status: DataTypes.STRING,
     reporterName: DataTypes.STRING,
     reporterPhone: DataTypes.STRING,
     reporterAddress: DataTypes.STRING,
