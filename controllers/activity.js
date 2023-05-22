@@ -266,7 +266,7 @@ module.exports = class ActivityController {
 
     const types = ['应急救援', '社会救助', '社会培训', '宣讲演练', '其他'];
     const scores = [6, 4, 2, 2, 2];
-    const score = scores[types.indexOf(info.activityType)] * info.duration;
+    const score = scores[types.indexOf(info.activityType)] * info.duration + info.rate;
     for(const p of info.participants) {
       await Ranking.increment({ score }, { where: { username: p.username } });
       await User.update({ state: 0 }, {
