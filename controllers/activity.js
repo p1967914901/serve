@@ -266,9 +266,9 @@ module.exports = class ActivityController {
 
     const types = ['应急救援', '社会救助', '社会培训', '宣讲演练', '其他'];
     const scores = [6, 4, 2, 2, 2];
-    const score = scores[types.indexOf(info.activityType)] * info.duration + info.rate;
+    const score = scores[types.indexOf(info.activityType)] * info.duration + info.rate['总体'];
     for(const p of info.participants) {
-      await Ranking.increment({ score }, { where: { username: p.username } });
+      await Ranking.increment({ score: score + info.rate[p.name] }, { where: { username: p.username } });
       await User.update({ state: 0 }, {
         where: { username: p.username }
       });
@@ -280,7 +280,9 @@ module.exports = class ActivityController {
       });
     }
 
-    
+    await Activity.update({ status: '已结束' }, {
+      where: {id: info.id}
+    });
 
     ctx.body = {
       data: {},
