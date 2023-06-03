@@ -9,7 +9,7 @@ const data = mockjs.mock({
       // 'type|1': ['照明设备', '通信设备', '基础设备'],
       // 'name|1': ['照明车'],
       reason: "@cparagraph",
-      "status|1": ["在库", "使用中", "损坏"],
+      "status|1": ["在库", "使用中", "维修"],
       createTime: '@date("yyyy-MM-dd")', // 时间
     },
   ],
